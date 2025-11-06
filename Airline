@@ -1,0 +1,284 @@
+Member.java 
+public class Member { 
+ private String memberId;
+ private String name;
+ private String email;
+ private String tier;
+ private int milesBalance;
+ public Member(String memberId, String name, String email) { 
+ this.memberId = memberId;
+ this.name = name;
+ this.email = email;
+ this.tier = "Silver";
+ this.milesBalance = 0;
+ } 
+ public void creditMiles(int distance) { 
+ milesBalance += distance;
+ } 
+ public void creditMiles(int distance, String fareClass) { 
+ int bonus = 0;
+ switch (fareClass) { 
+ case "Business": bonus = (int)(distance * 0.5); break;
+ case "First": bonus = (int)(distance * 1.0); break;
+ } 
+ milesBalance += distance + bonus;
+ } 
+ public boolean redeem(Reward reward) { 
+ if (milesBalance >= reward.getMilesRequired() && reward.isAvailable()) { 
+ milesBalance -= reward.getMilesRequired();
+ reward.decrementAvailability();
+ return true;
+ } 
+} 
+ public void printStatement() { 
+ System.out.println("==== Member Statement ====");
+ System.out.println("ID: " + memberId + ", Name: " + name + ", Tier: " + tier);
+ System.out.println("Miles Balance: " + milesBalance);
+ } 
+ public String getMemberId() 
+ { 
+ return memberId;
+ } 
+ public String getName() 
+ { 
+ return name;
+ } 
+ public String getEmail() 
+ { 
+ return email;
+ } 
+ public String getTier() 
+ { 
+ return tier;
+ } 
+ public int getMilesBalance() 
+ { 
+ return milesBalance;
+ } 
+} 
+SilverMember.java 
+public class SilverMember extends Member { 
+ public SilverMember(String memberId, String name, String email) { 
+ super(memberId, name, email);
+ this.tier = "Silver";
+ } 
+ public void evaluateTier() { 
+ if (milesBalance >= 25000) { 
+ System.out.println("Upgrading to Gold!");
+ } 
+ } 
+}
+GoldMember.java 
+public class GoldMember extends Member { 
+ public GoldMember(String memberId, String name, String email) { 
+ super(memberId, name, email);
+ this.tier = "Gold";
+ } 
+ public void creditMiles(int distance) { 
+ milesBalance += distance * 1.25;
+ } 
+ public void evaluateTier() { 
+ if (milesBalance >= 50000) { 
+ System.out.println("Upgrading to Platinum!");
+ } 
+ } 
+} 
+PlatinumMember.java 
+public class PlatinumMember extends Member { 
+ public PlatinumMember(String memberId, String name, String email) { 
+ super(memberId, name, email);
+ this.tier = "Platinum";
+ } 
+ public void creditMiles(int distance) { 
+ milesBalance += distance * 1.5;
+ } 
+ public void evaluateTier() { 
+ System.out.println("Top Tier: No further upgrades.");
+ } 
+} 
+FlightActivity.java 
+import java.time.LocalDate;
+public class FlightActivity { 
+ private String activityId;
+ private String flightNo;
+ private LocalDate date;
+ private int distance;
+ private String fareClass;
+ private int milesEarned;
+ public FlightActivity(String activityId, String flightNo, LocalDate date, int distance, String 
+fareClass) { 
+ this.activityId = activityId;
+ return false;
+ } 
+ public void evaluateTier() { 
+ if (milesBalance >= 50000) { 
+ tier = "Platinum";
+ } else if (milesBalance >= 25000) { 
+ tier = "Gold";
+ } else { 
+ tier = "Silver";
+ }
+this.flightNo = flightNo;
+ this.date = date;
+ this.distance = distance;
+ this.fareClass = fareClass;
+ this.milesEarned = calculateMiles();
+ } 
+ private int calculateMiles() { 
+ int bonus = 0;
+ if (fareClass.equals("Business")) bonus = (int)(distance * 0.5);
+ else if (fareClass.equals("First")) bonus = distance;
+ return distance + bonus;
+ } 
+ public int getMilesEarned() 
+ { 
+ return milesEarned;
+ } 
+ public String getActivityId() 
+ { 
+ return activityId; 
+ } 
+ public String getFlightNo() 
+ { 
+ return flightNo;
+ } 
+ public LocalDate getDate() 
+ { 
+ return date; 
+ } 
+ public int getDistance() 
+ { 
+ return distance;
+ } 
+ public String getFareClass() 
+ { 
+ return fareClass;
+ } 
+} 
+Reward.java 
+public class Reward { 
+ private String rewardId;
+ private String name; 
+ private int milesRequired;
+private int availability;
+ public Reward(String rewardId, String name, int milesRequired, int availability) { 
+ this.rewardId = rewardId;
+ this.name = name;
+ this.milesRequired = milesRequired;
+ this.availability = availability;
+ } 
+ public boolean isAvailable() { 
+ return availability > 0;
+ } 
+ public void decrementAvailability() { 
+ if (availability > 0) availability--;
+ } 
+ public String getRewardId() { 
+ return rewardId; 
+ } 
+ public String getName() { 
+ return name; 
+ } 
+ public int getMilesRequired() { 
+ return milesRequired; 
+ } 
+ public int getAvailability() { 
+ return availability;
+ } 
+} 
+LoyaltyService.java: 
+import java.util.*;
+public class LoyaltyService { 
+ private Map<String, Member> members = new HashMap<>();
+ private List<Reward> rewards = new ArrayList<>();
+ public void enrollMember(Member member) { 
+ members.put(member.getMemberId(), member);
+ System.out.println("Member enrolled: " + member.getName());
+ } 
+ public void creditMiles(String memberId, FlightActivity activity) { 
+ Member m = members.get(memberId);
+ if (m != null) { 
+ m.creditMiles(activity.getDistance(), activity.getFareClass());
+ m.evaluateTier();
+ System.out.println("Miles credited to: " + m.getName());
+} 
+ } 
+ public void redeemReward(String memberId, String rewardId) { 
+ Member m = members.get(memberId);
+ Reward r = rewards.stream().filter(x -> 
+x.getRewardId().equals(rewardId)).findFirst().orElse(null);
+ if (m != null && r != null) { 
+ if (m.redeem(r)) { 
+ System.out.println("Reward redeemed successfully: " + r.getName());
+ } else { 
+ System.out.println("Redemption failed: Insufficient miles or unavailable.");
+ } 
+ } 
+ } 
+ public void addReward(Reward reward) { 
+ rewards.add(reward);
+ } 
+ public void printMemberStatement(String memberId) { 
+ Member m = members.get(memberId);
+ if (m != null) m.printStatement();
+ } 
+ public void printTierSummary() { 
+ int silver = 0, gold = 0, platinum = 0;
+ for (Member m : members.values()) { 
+ switch (m.getTier()) { 
+ case "Silver": silver++; break;
+ case "Gold": gold++; break;
+ case "Platinum": platinum++; break;
+ } 
+ } 
+ System.out.println("=== Tier Distribution ===");
+ System.out.println("Silver: " + silver);
+ System.out.println("Gold: " + gold);
+ System.out.println("Platinum: " + platinum);
+ } 
+} 
+LoyaltyAppMain.java 
+import java.time.LocalDate;
+public class LoyaltyAppMain { 
+ public static void main(String[] args) { 
+ LoyaltyService service = new LoyaltyService();
+ Member silverMember = new SilverMember("M001", "Hema", 
+"hema@example.com");
+Member goldMember = new GoldMember("M002", "Ram", "ram@example.com");
+ Member platinumMember = new PlatinumMember("M003", "Zia", 
+"zia@example.com");
+ service.enrollMember(silverMember);
+ service.enrollMember(goldMember);
+ service.enrollMember(platinumMember);
+ Reward flightReward = new Reward("R001", "Free Flight", 15000, 2);
+ Reward upgradeReward = new Reward("R002", "Seat Upgrade", 10000, 1);
+ Reward voucherReward = new Reward("R003", "Gift Voucher", 5000, 3);
+ service.addReward(flightReward);
+ service.addReward(upgradeReward);
+ service.addReward(voucherReward);
+ System.out.println("\n--- Crediting Miles ---");
+ FlightActivity flight1 = new FlightActivity("A001", "FL101", LocalDate.now(), 1200, 
+"Economy");
+ FlightActivity flight2 = new FlightActivity("A002", "FL102", LocalDate.now(), 3000, 
+"Business");
+ FlightActivity flight3 = new FlightActivity("A003", "FL103", LocalDate.now(), 6000, 
+"First");
+ service.creditMiles("M001", flight1); 
+ service.creditMiles("M002", flight2); 
+ service.creditMiles("M003", flight3); 
+ FlightActivity bigFlight = new FlightActivity("A004", "FL200", LocalDate.now(), 
+25000, "Economy");
+ service.creditMiles("M001", bigFlight); 
+ System.out.println("\n--- Reward Redemption ---");
+ service.redeemReward("M001", "R003"); 
+ service.redeemReward("M002", "R001"); 
+ service.redeemReward("M003", "R002"); 
+ service.redeemReward("M001", "R001"); 
+ System.out.println("\n--- Member Statements ---");
+ service.printMemberStatement("M001");
+ service.printMemberStatement("M002");
+ service.printMemberStatement("M003");
+ System.out.println("\n--- Tier Summary ---");
+ service.printTierSummary();
+ } 
+}
